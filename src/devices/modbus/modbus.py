@@ -10,6 +10,7 @@ client = ModbusTcpClient(
     timeout = 3
 )
 
+
 connection = client.connect()
 
 if(connection == True):
@@ -20,3 +21,13 @@ else:
 read = client.read_holding_registers(address=10, count=6, device_id=1) # here in new libraries, we have "device_id" as slave id for the device. 
 print(read.registers)                                                  # therefore,  to define the slave id, we have to use "device_id" parameter provided by TCP Client over ModBusTCPClient Library by pymodbus 
 time.sleep(1)  
+
+
+class ModbusSlaveDevice:
+    def __init__(self, device_id, device_code, device_name, config_type, connection_parameters, slave_id):
+        self.device_id = device_id
+        self.device_code = device_code
+        self.device_name = device_name
+        self.config_type = config_type
+        self.connection_parameters = connection_parameters
+        self.slave_id = slave_id
