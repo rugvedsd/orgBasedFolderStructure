@@ -1,0 +1,9 @@
+{
+    "host": "10.129.2.224",
+    "port": 4196,
+    "timeout": 3
+}
+{
+    "wordorder": "big", 
+    "byteorder": "big"
+}

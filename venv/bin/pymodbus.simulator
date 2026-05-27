@@ -1,4 +1,4 @@
-#!/home/smartiam/Desktop/RugvedSD/OnBoarding-IAM/pymodbus-prac/orgBasedFolderStructure/venv/bin/python3
+#!/home/smartiam/Desktop/RugvedSD/OnBoarding-IAM/orgBasedFolderStructure/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

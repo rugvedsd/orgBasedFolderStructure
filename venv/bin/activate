@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV=/home/smartiam/Desktop/RugvedSD/OnBoarding-IAM/pymodbus-prac/orgBasedFolderStructure/venv
+VIRTUAL_ENV=/home/smartiam/Desktop/RugvedSD/OnBoarding-IAM/orgBasedFolderStructure/venv
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

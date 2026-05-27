@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /home/smartiam/Desktop/RugvedSD/OnBoarding-IAM/pymodbus-prac/orgBasedFolderStructure/venv
+set -gx VIRTUAL_ENV /home/smartiam/Desktop/RugvedSD/OnBoarding-IAM/orgBasedFolderStructure/venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH

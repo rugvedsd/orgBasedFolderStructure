@@ -45,8 +45,6 @@ def init_db():
 
 
 
-
-
 def get_session():
     if DBSession is not None:
         session = DBSession()
@@ -56,13 +54,12 @@ def get_session():
 
 
 
-
-
 class ModbusDevice(Base):
     __tablename__ = 'modbus_device'
     id = Column(Integer, primary_key=True)  
     device_code = Column(String(20), nullable=True)
     device_name = Column(String(50), nullable=False)
+    dev_zone = Column(String(20), nullable=False)
     config_type = Column(String(20), nullable=False)
     connection_parameters = Column(String(200), nullable=False)
     slave_id = Column(Integer, nullable=False)
@@ -73,6 +70,13 @@ class ModbusDevice(Base):
 class ModbusDeviceInputs(Base):
     __tablename__ = 'modbus_device_inputs'
     id = Column(Integer, primary_key=True)
+    device_id = Column(Integer, ForeignKey('modbus_device.id'), nullable=False)
+    device_zone = Column(String(20), nullable=False)
+    device_register_type = Column(String(50), nullable=False)
+    device_register_address = Column(Integer, nullable=False)
+    device_register_count = Column(Integer, nullable=False)
+    device_decode_type = Column(String(50), nullable=False)
+    device_endianess = Column(String(50), nullable=False)
 
 
 
