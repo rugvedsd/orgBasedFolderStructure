@@ -14,5 +14,3 @@ if __name__ == "__main__":
     else:
         logger.error("Failed to initialize the database.")
 
-    
-    
