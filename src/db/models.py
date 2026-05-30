@@ -67,7 +67,7 @@ class ModbusDevice(Base):
 
 
 
-class ModbusDeviceInputs(Base):
+class ModbusDeviceinputs(Base):
     __tablename__ = 'modbus_device_inputs'
     id = Column(Integer, primary_key=True)
     device_id = Column(Integer, ForeignKey('modbus_device.id'), nullable=False)
@@ -78,8 +78,14 @@ class ModbusDeviceInputs(Base):
     device_decode_type = Column(String(50), nullable=False)
     device_endianess = Column(String(50), nullable=False)
 
+class ModbusPolledData(Base):
+    __tablename__ = 'modbus_polled_data'
 
-
+    id        = Column(Integer, primary_key=True)
+    device_id = Column(Integer, ForeignKey('modbus_device.id'), nullable=False)
+    input_id  = Column(Integer, ForeignKey('modbus_device_inputs.id'), nullable=False)
+    raw_value = Column(String(200), nullable=False)   # registers stored as JSON string
+    polled_at = Column(DateTime, default=datetime.utcnow)
 
 
 class ModbusDeviceOutputs(Base):

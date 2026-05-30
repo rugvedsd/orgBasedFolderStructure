@@ -1,8 +1,8 @@
 import json
 from venv import logger
-
+import threading
 from pymodbus.client import ModbusTcpClient
-from src.db.models import get_session,ModbusDevice, ModbusDeviceInputs
+from src.db.models import get_session,ModbusDevice, ModbusDeviceinputs,  ModbusPolledData
 import time
 
 def init_client():
@@ -31,10 +31,7 @@ def init_client():
 
     connection.close()  
 
-
-
-
-def __init_modbus_devices():
+def init_all_modbus_devices():
     try:
         
         db = get_session()
@@ -48,9 +45,8 @@ def __init_modbus_devices():
                 connection_parameters = device.connection_parameters,
                 slave_id = device.slave_id
             )
-
         db.close()    
-    except Exception as e:
+    except Exception as e:  
         logger.error(f"Error initializing Modbus devices: {e}")
 
 
@@ -81,24 +77,11 @@ class ModbusSlaveDevice:
         self.poll = None
         self.poll_data()
 
-        
-
 
     def initialise_inputs(self):
         try:
             db = get_session()
-            modbus_inputs = db.query(ModbusDeviceInputs).filter(ModbusDeviceInputs.device_id == self.device_id).all()
-            # for input in modbus_inputs:
-            #     ModbusDeviceInput(
-            #         device_id = self.device_id,
-            #         slave_id = self.slave_id,
-            #         device_zone = input.device_zone,
-            #         device_register_type = input.device_register_type,
-            #         device_register_address = input.device_register_address,
-            #         device_register_count = input.device_register_count,
-            #         device_decode_type = input.device_decode_type,
-            #         device_endianess = input.device_endianess
-            #     )
+            modbus_inputs = db.query(ModbusDeviceinputs).filter(ModbusDeviceinputs.device_id == self.device_id).all()
             self.inouts = modbus_inputs
             db.close()    
         except Exception as e:
@@ -131,10 +114,36 @@ class ModbusSlaveDevice:
                 for input in self.inouts:
                     if input.device_register_type == "Holding":
                         read = self.client.read_holding_registers(address=input.device_register_address, count=input.device_register_count, device_id=self.slave_id)
+                        if read.isError():
+                            logger.error(f"Modbus error reading device {self.device_name} input {input.id}")
+                            continue
+                        db = get_session()
+                        db.add(ModbusPolledData(
+                            device_id = self.device_id,
+                            input_id  = input.id,
+                            raw_value = json.dumps(read.registers)
+                        ))
+                        db.commit()
+                        db.close()
+
+                        logger.debug(f"{self.device_name} | input {input.id} | {read.registers}")          
                 return read.registers
             else:
                 return logger.warning(f"TCP client not initialized for device {self.device_register_type} (ID: {self.device_id})")
         except Exception as e:
             return logger.error(f"Error reading from Modbus device {self.device_register_type} (ID: {self.device_register_address}): {e}")
+        
+    def start_polling(self, interval_seconds=5):
+        t = threading.Thread(
+            target = self._polling_loop,
+            args   = (interval_seconds,),
+            daemon = True,
+            name   = f"poll-{self.device_code}"
+        )
+        t.start()
 
+    def _polling_loop(self, interval_seconds):
+        while not self._stop.is_set():
+            self.poll_data()
+            time.sleep(interval_seconds)
 

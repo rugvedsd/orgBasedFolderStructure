@@ -1,66 +1,39 @@
-# src/routes/all_routes.py
-
-from fastapi import APIRouter
-from src.db.models import get_session
-from src.db.models import ModbusDevice
-from src.devices.modbus.modbus import ModbusSlaveDevice
+from sqlalchemy import desc
+import json
+from src.db.models import ModbusDevice, ModbusDeviceinputs, ModbusPolledData, get_session
+from fastapi import APIRouter 
 
 router = APIRouter()
 
-
-@router.get("/devices/live")
-def get_live_devices_data():
-
+@router.get("/devices/polled-data")
+def get_polled_data():
     db = get_session()
-
-    devices = db.query(ModbusDevice).filter(
-        ModbusDevice.is_deleted == False
-    ).all()
-
+    devices = db.query(ModbusDevice).filter(ModbusDevice.is_deleted == False).all()
+    
     all_devices_data = []
 
     for device in devices:
+        inputs = db.query(ModbusDeviceinputs).filter(ModbusDeviceinputs.device_id == device.id).all()
 
-        try:
+        input_data = []
+        for inp in inputs:
+            latest = db.query(ModbusPolledData).filter(
+                ModbusPolledData.input_id == inp.id
+            ).order_by(desc(ModbusPolledData.polled_at)).first()
 
-            modbus_device = ModbusSlaveDevice(
-                host=device.host,
-                port=device.port,
-                slave_id=device.slave_id
-            )
+            input_data.append({
+                "input_id"  : inp.id,
+                "address"   : inp.device_register_address,
+                "registers" : json.loads(latest.raw_value) if latest else None,
+                "polled_at" : latest.polled_at.isoformat() if latest else None
+            })
 
-            modbus_device.connect()
-
-            registers = modbus_device.read_holding_registers(
-                address=0,
-                count=5
-            )
-
-            modbus_device.close()
-
-            all_devices_data.append(
-                {
-                    "device_id": device.id,
-                    "device_name": device.device_name,
-                    "host": device.host,
-                    "port": device.port,
-                    "slave_id": device.slave_id,
-                    "status": "online",
-                    "registers": registers
-                }
-            )
-
-        except Exception as error:
-
-            all_devices_data.append(
-                {
-                    "device_id": device.id,
-                    "device_name": device.device_name,
-                    "status": "offline",
-                    "error": str(error)
-                }
-            )
+        all_devices_data.append({
+            "device_id"   : device.id,
+            "device_name" : device.device_name,
+            "slave_id"    : device.slave_id,
+            "inputs"      : input_data
+        })
 
     db.close()
-
     return all_devices_data
